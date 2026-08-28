@@ -1502,13 +1502,7 @@ Scenarios 8 and 10 need a prepared codebase:
 - Passed: /10
 ```
 
-- [ ] **Step 6: Написать `.gitignore`**
-
-```
-.agents/
-.claude/
-.opencode/
-```
+- [ ] **Step 6: `.gitignore`** (уже создан в Task 1; добавить строки `.agents/`, `.claude/`, `.opencode/`)
 
 - [ ] **Step 7: Полный валидатор со ссылками**
 
