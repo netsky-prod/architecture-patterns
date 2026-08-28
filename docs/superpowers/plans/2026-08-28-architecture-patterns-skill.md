@@ -6,7 +6,7 @@
 
 **Architecture:** Один скилл `skills/architecture-patterns/` = `SKILL.md` (протокол рефлексии + decision tree + индекс + правила выбора) + `patterns/{code,component,system}/*.md` (1 файл = 1 паттерн, progressive disclosure) + `references/{anti-patterns,decision-tree}.md`. `install.sh` кладёт symlink в `.agents/skills` (Codex + opencode), `.claude/skills` (Claude Code + opencode), `.opencode/skills`. Формат валидируется `scripts/validate.sh`.
 
-**Tech Stack:** Markdown, bash (validate.sh, install.sh, test-validate.sh). Никаких зависимостей.
+**Tech Stack:** Markdown, bash (validate.sh, install.sh). Никаких зависимостей.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-architecture-patterns-skill-design.md` (читать вместе с планом; план аргументируется от спеки).
 
@@ -14,13 +14,11 @@
 
 Все задачи неявно включают эти требования (значения — дословно из спеки):
 
-- Имя скилла: `architecture-patterns`; должно совпадать с именем каталога; regex `^[a-z0-9]+(-[a-z0-9]+)*$`.
-- `description` в frontmatter: 1–1024 символов, однострочная, 3-е лицо, «что делает + когда использовать».
-- `SKILL.md`: тело < 500 строк.
-- Файлы паттернов: 40–80 строк каждый, обязательные секции в фиксированном порядке, **ни одного fenced code block**.
-- `references/*.md`: ни одного fenced code block.
-- `SKILL.md`: fenced code block разрешён только без языкового тега (```  plain ```) — для шаблонов блоков.
-- Ссылки: файлы паттернов линкуются из `SKILL.md` ровно в один скачок; file-to-file ссылки в секции `Related` допустимы.
+- Имя скилла: `architecture-patterns`; должно совпадать с именем каталога; regex `^[a-z0-9]+(-[a-z0-9]+)*$` (проверяется).
+- `description` в frontmatter: 1–1024 символов, однострочная, 3-е лицо, «что делает + когда использовать» (проверяется).
+- **Ни одного fenced code block** во всём скилле — решение «без кода» (проверяется).
+- Ссылки: файлы паттернов линкуются из `SKILL.md` ровно в один скачок; file-to-file ссылки в секции `Related` допустимы; все ссылки должны разрешаться (проверяется `--links`).
+- Конвенции (не проверяются скриптом): SKILL.md < 500 строк (token-бюджет Anthropic); файлы паттернов 50–70 строк, секции в фиксированном порядке — см. AGENTS.md.
 - Контент скилла (SKILL.md, patterns, references): **английский**. Никаких кодовых примеров.
 - Каталог v1 — ровно 42 файла (списки в Task 3–6).
 - Правила выбора (фиксируются в SKILL.md): default = ни одного паттерна; максимум 1–3 паттерна на задачу; consistency — существующий стиль проекта приоритетен.
@@ -40,9 +38,7 @@
 │       ├── anti-patterns.md          # Task 3
 │       └── decision-tree.md          # Task 3
 ├── scripts/
-│   ├── validate.sh                   # Task 1
-│   ├── test-validate.sh              # Task 1
-│   └── fixtures/…                   # Task 1
+│   └── validate.sh                   # Task 1
 ├── install.sh                        # Task 8
 ├── evals/scenarios.md                # Task 8 (прогон — Task 10)
 ├── AGENTS.md                         # Task 8
@@ -58,240 +54,65 @@
 
 **Files:**
 - Create: `scripts/validate.sh`
-- Create: `scripts/test-validate.sh`
-- Create: `scripts/fixtures/good/SKILL.md`, `scripts/fixtures/good/patterns/code/alpha.md`, `scripts/fixtures/good/references/anti-patterns.md`, `scripts/fixtures/good/references/decision-tree.md`
-- Create: `scripts/fixtures/bad-name/SKILL.md`, `scripts/fixtures/bad-name/patterns/code/alpha.md`, `scripts/fixtures/bad-name/references/anti-patterns.md`, `scripts/fixtures/bad-name/references/decision-tree.md`
-- Create: `scripts/fixtures/bad-lines/` (копия good, alpha.md укорочен до 30 строк)
-- Create: `scripts/fixtures/missing-sections/` (копия good, в alpha.md удалена секция `## When NOT to use`)
-- Create: `scripts/fixtures/fenced-code/` (копия good, в alpha.md добавлен fenced block)
 
 **Interfaces:**
 - Consumes: ничего (первая задача).
-- Produces: `scripts/validate.sh <skill-dir> [--check-links]` — exit 0/1, сообщения `ok:`/`FAIL:` в stdout/stderr. Все последующие задачи вызывают его.
+- Produces: `scripts/validate.sh <skill-dir> [--links]` — exit 0/1, сообщения `FAIL: ...` в stderr. Его вызывают Task 2, 7, 8.
 
-Чек-листы валидатора (все обязательны):
+Проверки (каждая = реальный сценарий поломки, не форматное правило):
 
-1. `SKILL.md` существует; frontmatter: `name` = basename каталога и совпадает с `^[a-z0-9]+(-[a-z0-9]+)*$`; `description` — одна строка, длина 1..1024.
-2. Тело SKILL.md (строки после закрывающего `---`) < 500 строк.
-3. В SKILL.md присутствуют секции (порядок): `## When to use`, `## When NOT to use`, `## Reflection protocol`, `## Decision tree`, `## Index`, `## Selection rules`, `## Output format`.
-4. В SKILL.md нет fenced block с языковым тегом (строка ```` ``` ```` может содержать только пустую строку/пробелы).
-5. Для каждого `patterns/<level>/<name>.md`: 40..80 строк; нет строк, начинающихся с ```` ``` ````; секции в строго возрастающем порядке строк: `## One-liner` < `## Symptoms` < `## Solution` < `## When to use` < `## When NOT to use` < `## Trade-offs` < `## Related`.
-6. `references/anti-patterns.md` и `references/decision-tree.md` существуют, без fenced блоков.
-7. `--check-links`: каждая ссылка вида `patterns/[a-z0-9/_.-]*\.md`, найденная в SKILL.md, references/*.md и patterns/**/*.md, указывает на существующий файл; каждый файл `patterns/**.md` упомянут в SKILL.md (индекс полон).
+1. `name`: формат `^[a-z0-9]+(-[a-z0-9]+)*$` и равен имени каталога — иначе opencode/Claude не поднимут скилл.
+2. `description`: одна строка, 1..1024 символов — лимит загрузки frontmatter.
+3. Нет fenced code block в любом месте скилла — контентное решение «без кода».
+4. `--links`: каждая ссылка `patterns/...md` разрешается в существующий файл; каждый файл `patterns/**.md` упомянут в SKILL.md — иначе агент не прочитает паттерн.
 
-- [ ] **Step 1: Написать тесты (fixtures + test-validate.sh)** — ТЕСТЫ ПЕРВЫЕ
+Подсчёт строк и порядок секций НЕ проверяются — это конвенции (AGENTS.md), не валидация.
 
-Создай `scripts/fixtures/good/` — минимально валидный скилл:
-
-`scripts/fixtures/good/SKILL.md`:
-
-```markdown
----
-name: good
-description: Fixture skill used by the validator tests. Use when testing.
----
-
-# Good
-
-## When to use
-- Testing the validator.
-
-## When NOT to use
-- Never in production.
-
-## Reflection protocol
-- Fill the checklist.
-
-## Decision tree
-Symptom → file:
-- anything → patterns/code/alpha.md
-
-## Index
-patterns/code/alpha.md — fixture pattern
-
-## Selection rules
-1. Default: no pattern.
-
-## Output format
-Level / Chosen / Rejected.
-```
-
-`scripts/fixtures/good/patterns/code/alpha.md` — ровно 45 строк, шаблон (см. ниже), без fenced блоков:
-
-```markdown
-# Alpha
-
-## One-liner
-Fixture pattern for validator tests.
-
-## Symptoms
-- Symptom one.
-- Symptom two.
-- Symptom three.
-- Symptom four.
-- Symptom five.
-
-## Solution
-- Role one.
-- Role two.
-- Rule three.
-
-## When to use
-- When symptom matches.
-- When structure is right.
-
-## When NOT to use
-- When the problem is trivial.
-- When a plain solution fits.
-
-## Trade-offs
-- vs plain: more structure, more indirection.
-
-## Related
-- patterns/code/alpha.md — self reference for link checks.
-```
-
-(Дострой файл до ровно 45 строк пустыми строками/буллетами при необходимости — валидатор требует 40..80.)
-
-`scripts/fixtures/good/references/anti-patterns.md` и `decision-tree.md` — по 5+ строк прозы, без fenced блоков.
-
-Копии с дефектами:
-- `bad-name/`: как good, но `name: Bad_Skill`.
-- `bad-lines/`: как good, но `alpha.md` = 30 строк.
-- `missing-sections/`: как good, но в `alpha.md` удалена секция `## When NOT to use` (остальные как есть).
-- `fenced-code/`: как good, но в `alpha.md` вставлен блок:
-
-````markdown
-```python
-def f(): pass
-```
-````
-
-`scripts/test-validate.sh`:
+- [ ] **Step 1: Написать `scripts/validate.sh`**
 
 ```bash
 #!/usr/bin/env bash
-# Tests for scripts/validate.sh. Run: bash scripts/test-validate.sh
-set -uo pipefail
-cd "$(dirname "$0")/.."
-
-PASS=0; FAIL=0
-expect() { # expect <fixture-dir> <pass|fail>
-  local dir="$1" want="$2" got
-  if bash scripts/validate.sh "scripts/fixtures/$dir" >/dev/null 2>&1; then got=pass; else got=fail; fi
-  if [ "$got" = "$want" ]; then PASS=$((PASS+1)); else FAIL=$((FAIL+1)); echo "MISMATCH: $dir wanted $want got $got" >&2; fi
-}
-expect good pass
-expect bad-name fail
-expect bad-lines fail
-expect missing-sections fail
-expect fenced-code fail
-
-echo "test-validate: PASS=$PASS FAIL=$FAIL"
-[ "$FAIL" -eq 0 ] || exit 1
-```
-
-- [ ] **Step 2: Прогнать тесты — должны провалиться**
-
-Run: `bash scripts/test-validate.sh`
-Expected: FAIL — `scripts/validate.sh` не существует (все expect дают `got=fail`, в том числе `good` → MISMATCH).
-
-- [ ] **Step 3: Написать `scripts/validate.sh`**
-
-```bash
-#!/usr/bin/env bash
-# Validate the architecture-patterns skill format rules.
-# Usage: scripts/validate.sh <skill-dir> [--check-links]
+# Integrity checks for the architecture-patterns skill.
+#   no flag:     loading constraints + the no-code decision
+#   --links:     + link integrity + index completeness
+# Usage: scripts/validate.sh <skill-dir> [--links]
 # Exit 0 when all checks pass, 1 otherwise.
 set -uo pipefail
 
 SKILL_DIR="${1:-skills/architecture-patterns}"
 CHECK_LINKS=0
-[ "${2:-}" = "--check-links" ] && CHECK_LINKS=1
+[ "${2:-}" = "--links" ] && CHECK_LINKS=1
 
 ERRORS=0
 fail() { echo "FAIL: $*" >&2; ERRORS=$((ERRORS + 1)); }
-ok()   { echo "ok:   $*"; }
 
 [ -d "$SKILL_DIR" ] || { echo "skill dir not found: $SKILL_DIR" >&2; exit 1; }
 SKILL_MD="$SKILL_DIR/SKILL.md"
 [ -f "$SKILL_MD" ] || { echo "missing $SKILL_MD" >&2; exit 1; }
 
-# --- 1. frontmatter: name, description -------------------------------------
+# 1. name: valid format and equal to the directory name (loading constraint)
 fm_end=$(awk 'NR>1 && /^---$/ {print NR; exit}' "$SKILL_MD")
 [ -n "$fm_end" ] || { echo "no closing frontmatter in $SKILL_MD" >&2; exit 1; }
-fm=$(head -n "$fm_end" "$SKILL_MD")
-
-name=$(printf '%s\n' "$fm" | grep -E '^name:' | head -1 | sed 's/^name:[[:space:]]*//' | tr -d ' ')
+name=$(head -n "$fm_end" "$SKILL_MD" | grep -E '^name:' | head -1 | sed 's/^name:[[:space:]]*//' | tr -d ' ')
 if ! printf '%s' "$name" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$'; then
   fail "frontmatter name '$name' violates ^[a-z0-9]+(-[a-z0-9]+)*$"
-else
-  ok "frontmatter name format"
 fi
 if [ "$name" != "$(basename "$SKILL_DIR")" ]; then
   fail "name '$name' != directory name '$(basename "$SKILL_DIR")'"
-else
-  ok "name matches directory"
 fi
 
-desc=$(printf '%s\n' "$fm" | grep -E '^description:' | head -1 | sed 's/^description:[[:space:]]*//' | sed 's/[[:space:]]*$//')
+# 2. description: single line, 1..1024 chars (frontmatter loading limit)
+desc=$(head -n "$fm_end" "$SKILL_MD" | grep -E '^description:' | head -1 | sed 's/^description:[[:space:]]*//' | sed 's/[[:space:]]*$//')
 dlen=${#desc}
 if [ "$dlen" -lt 1 ] || [ "$dlen" -gt 1024 ]; then
   fail "description length $dlen outside 1..1024"
-else
-  ok "description length $dlen"
 fi
 
-# --- 2. body length < 500 ---------------------------------------------------
-body_lines=$(( $(wc -l < "$SKILL_MD") - fm_end ))
-if [ "$body_lines" -ge 500 ]; then
-  fail "SKILL.md body is $body_lines lines (must be < 500)"
-else
-  ok "SKILL.md body $body_lines lines"
-fi
+# 3. no-code decision: no fenced blocks anywhere in the skill
+fence=$(grep -rnE '^```' "$SKILL_DIR" | head -1 || true)
+if [ -n "$fence" ]; then fail "fenced code block: $fence"; fi
 
-# --- 3. required SKILL.md sections, in order ------------------------------
-prev=0
-for sec in "## When to use" "## When NOT to use" "## Reflection protocol" "## Decision tree" "## Index" "## Selection rules" "## Output format"; do
-  line=$(grep -n -F "$sec" "$SKILL_MD" | head -1 | cut -d: -f1)
-  if [ -z "$line" ]; then fail "SKILL.md missing section '$sec'"; continue; fi
-  if [ "$line" -le "$prev" ]; then fail "SKILL.md section '$sec' out of order"; continue; fi
-  prev=$line
-done
-[ "$ERRORS" -eq 0 ] && ok "SKILL.md sections in order"
-
-# --- 4. no tagged fenced blocks in SKILL.md --------------------------------
-tagged=$(grep -nE '^```[A-Za-z]' "$SKILL_MD" | head -1 | cut -d: -f1 || true)
-if [ -n "$tagged" ]; then fail "SKILL.md has tagged fenced block at line $tagged"; else ok "SKILL.md no tagged fences"; fi
-
-# --- 5. pattern files -------------------------------------------------------
-for f in "$SKILL_DIR"/patterns/*/*.md; do
-  [ -e "$f" ] || continue
-  rel=${f#"$SKILL_DIR"/}
-  lines=$(wc -l < "$f")
-  if [ "$lines" -lt 40 ] || [ "$lines" -gt 80 ]; then fail "$rel: $lines lines (must be 40..80)"; fi
-  fence=$(grep -nE '^```' "$f" | head -1 | cut -d: -f1 || true)
-  if [ -n "$fence" ]; then fail "$rel: fenced block at line $fence"; fi
-  prev=0
-  for sec in "## One-liner" "## Symptoms" "## Solution" "## When to use" "## When NOT to use" "## Trade-offs" "## Related"; do
-    line=$(grep -n -F "$sec" "$f" | head -1 | cut -d: -f1)
-    if [ -z "$line" ]; then fail "$rel: missing section '$sec'"; continue; fi
-    if [ "$line" -le "$prev" ]; then fail "$rel: section '$sec' out of order"; continue; fi
-    prev=$line
-  done
-  [ "$ERRORS" -eq 0 ] && ok "$rel sections"
-done
-
-# --- 6. references ----------------------------------------------------------
-for rf in anti-patterns.md decision-tree.md; do
-  f="$SKILL_DIR/references/$rf"
-  if [ ! -f "$f" ]; then fail "missing references/$rf"; continue; fi
-  fence=$(grep -nE '^```' "$f" | head -1 | cut -d: -f1 || true)
-  if [ -n "$fence" ]; then fail "references/$rf: fenced block at line $fence"; fi
-done
-[ "$ERRORS" -eq 0 ] && ok "references present, no fences"
-
-# --- 7. link check (opt-in) --------------------------------------------------
+# 4. links (opt-in until the catalogue exists)
 if [ "$CHECK_LINKS" -eq 1 ]; then
   links=$(grep -rhoE 'patterns/[a-z0-9/_.-]*\.md' "$SKILL_DIR" | sort -u || true)
   for l in $links; do
@@ -302,24 +123,31 @@ if [ "$CHECK_LINKS" -eq 1 ]; then
     rel=${f#"$SKILL_DIR"/}
     grep -qF "$rel" "$SKILL_MD" || fail "not in SKILL.md index: $rel"
   done
-  [ "$ERRORS" -eq 0 ] && ok "links resolve, index complete"
 fi
 
 [ "$ERRORS" -eq 0 ] && { echo "validate: OK"; exit 0; } || { echo "validate: $ERRORS error(s)"; exit 1; }
 ```
 
-(Правило: `scripts/validate.sh` — единственный источник формальных проверок; при правке правил валидатора сначала правятся тесты, потом валидатор.)
+- [ ] **Step 2: Быстрый прогон (throwaway, /tmp — не fixtures в репо)**
 
-- [ ] **Step 4: Прогнать тесты — должны пройти**
+```bash
+T=$(mktemp -d)
+mkdir -p "$T/skill/patterns/code"
+printf -- '---\nname: skill\ndescription: Probe skill. Use when probing.\n---\n\n# S\n\nSee patterns/code/a.md\n' > "$T/skill/SKILL.md"
+printf -- '# A\n\ntext\n' > "$T/skill/patterns/code/a.md"
+bash scripts/validate.sh "$T/skill" --links; echo "probe-good=$?"
+rm "$T/skill/patterns/code/a.md"
+bash scripts/validate.sh "$T/skill" --links >/dev/null 2>&1; echo "probe-broken=$?"
+rm -rf "$T"
+```
 
-Run: `bash scripts/test-validate.sh`
-Expected: `test-validate: PASS=5 FAIL=0`
+Expected: `probe-good=0`, `probe-broken=1`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add scripts/
-git commit -m "test: format validator for the architecture-patterns skill"
+git commit -m "chore: integrity checks for the skill (loading constraints, links, no-code)"
 ```
 
 ---
@@ -889,7 +717,7 @@ Default resolution: write the plain implementation and note where it would need 
 - [ ] **Step 4: Прогнать валидатор**
 
 Run: `bash scripts/validate.sh skills/architecture-patterns`
-Expected: `validate: OK` (ссылки на ещё не созданные паттерн-файлы проверяются только в `--check-links` режиме — это нормально до Task 7).
+Expected: `validate: OK` (ссылки на ещё не созданные паттерн-файлы проверяются только с флагом `--links` — он включается в Task 7).
 
 - [ ] **Step 5: Commit**
 
@@ -1041,7 +869,7 @@ Brief'ы (final-контент требований к каждому файлу
 - [ ] **Step 2: Прогнать валидатор**
 
 Run: `bash scripts/validate.sh skills/architecture-patterns`
-Expected: `validate: OK` (формат; --check-links пока не нужен — остальные паттерны появятся в Task 4-6)
+Expected: `validate: OK` (без флага `--links` — остальные паттерны появятся в Task 4-6)
 
 - [ ] **Step 3: Перевёрка качества каждого файла** (чек-лист, вручную): 50-70 строк; все 7 секций; каждый пункт brief'а отражён в соответствующей секции; `Related` — полные пути; английский; нет fenced блоков.
 
@@ -1543,7 +1371,7 @@ done
 Run (из корня репо):
 
 ```bash
-chmod +x install.sh scripts/validate.sh scripts/test-validate.sh
+chmod +x install.sh scripts/validate.sh
 bash -n install.sh && \
 ./install.sh && \
 test -f .agents/skills/architecture-patterns/SKILL.md && \
@@ -1607,7 +1435,7 @@ The skill is linked into `.agents/skills/` (Codex, OpenCode), `.claude/skills/` 
 
 ## Development
 
-- Format rules: `bash scripts/validate.sh skills/architecture-patterns [--check-links]`, tests: `bash scripts/test-validate.sh`.
+- Integrity checks: `bash scripts/validate.sh skills/architecture-patterns [--links]`.
 - Adding a pattern: create `patterns/<level>/<kebab-name>.md` (template in AGENTS.md), add a line to the SKILL.md index, a symptom line to the SKILL.md decision tree and a section to `references/decision-tree.md`.
 - Constraints: SKILL.md < 500 lines; pattern files 40-80 lines, no fenced code; content in English.
 
@@ -1626,7 +1454,7 @@ Rules for agents working in this repository.
 - Skill content (everything under skills/) is English, no code examples, no fenced code blocks in patterns/ and references/.
 - SKILL.md: body < 500 lines. Pattern files: 40-80 lines, sections in this order: One-liner, Symptoms, Solution, When to use, When NOT to use, Trade-offs, Related.
 - Pattern file names: kebab-case, must match the name in the SKILL.md index. Related links: full paths from the skill root (patterns/<level>/<name>.md).
-- Before committing any change under skills/: run `bash scripts/validate.sh skills/architecture-patterns --check-links` and `bash scripts/test-validate.sh`.
+- Before committing any change under skills/: run `bash scripts/validate.sh skills/architecture-patterns --links`.
 - Adding a pattern: 1) patterns/<level>/<name>.md, 2) SKILL.md index line, 3) symptom line in the SKILL.md decision tree, 4) section in references/decision-tree.md. If SKILL.md grows beyond the limit, move detail into references/.
 - Do not rename the skill (architecture-patterns) — the directory name is part of the contract.
 ```
@@ -1684,7 +1512,7 @@ Scenarios 8 and 10 need a prepared codebase:
 
 - [ ] **Step 7: Полный валидатор со ссылками**
 
-Run: `bash scripts/validate.sh skills/architecture-patterns --check-links`
+Run: `bash scripts/validate.sh skills/architecture-patterns --links`
 Expected: `validate: OK` (все 42 ссылки индекса разрешаются, индекс полон)
 
 - [ ] **Step 8: Commit**
@@ -1702,31 +1530,25 @@ git commit -m "feat: install script, README, AGENTS.md, eval scenarios"
 - Modify (только если есть нарушения): любые файлы из Tasks 1-7.
 
 **Interfaces:**
-- Consumes: `scripts/validate.sh`, `scripts/test-validate.sh`, весь скилл.
+- Consumes: `scripts/validate.sh`, весь скилл.
 - Produces: подтверждённое состояние «v1 готово к eval».
 
-- [ ] **Step 1: Тесты валидатора**
+- [ ] **Step 1: Полный валидатор**
 
-Run: `bash scripts/test-validate.sh`
-Expected: `test-validate: PASS=5 FAIL=0`
-
-- [ ] **Step 2: Полный валидатор**
-
-Run: `bash scripts/validate.sh skills/architecture-patterns --check-links`
+Run: `bash scripts/validate.sh skills/architecture-patterns --links`
 Expected: `validate: OK`
 
-- [ ] **Step 3: Аудит размеров и полноты**
+- [ ] **Step 2: Аудит полноты каталога**
 
 Run:
 
 ```bash
-wc -l skills/architecture-patterns/SKILL.md
 find skills/architecture-patterns/patterns -name '*.md' | wc -l
 grep -c '^### ' skills/architecture-patterns/references/decision-tree.md
 for f in skills/architecture-patterns/patterns/*/*.md; do test -f "$f"; done && echo ALL-EXIST
 ```
 
-Expected: SKILL.md < 500; файлов = 42; `### ` секций в decision-tree = 42 (+0, без лишних); ALL-EXIST.
+Expected: файлов = 42; `### ` секций в decision-tree = 42; ALL-EXIST.
 
 - [ ] **Step 4: Сверка индекса с каталогом**
 
@@ -1805,7 +1627,7 @@ Expected: как в таблице; заполнить Observed.
 Для каждого упавшего сценария:
 1. Определить причину: не сработал триггер (description), не понятен routing (decision tree), правило не прозвучало (Selection rules/Output format).
 2. Изменить wording в `SKILL.md` (минимально, не ломая лимиты).
-3. Run: `bash scripts/validate.sh skills/architecture-patterns --check-links` → `validate: OK`.
+3. Run: `bash scripts/validate.sh skills/architecture-patterns --links` → `validate: OK`.
 4. Повторить только упавший сценарий.
 
 - [ ] **Step 5: Заполнить Results и commit**
