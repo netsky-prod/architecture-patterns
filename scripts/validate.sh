@@ -36,7 +36,7 @@ if [ "$dlen" -lt 1 ] || [ "$dlen" -gt 1024 ]; then
 fi
 
 # 3. no-code decision: no fenced blocks anywhere in the skill
-fence=$(grep -rnE '^```' "$SKILL_DIR" | head -1 || true)
+fence=$(grep -rnE '^(```|~~~)' "$SKILL_DIR" | head -1 || true)
 if [ -n "$fence" ]; then fail "fenced code block: $fence"; fi
 
 # 4. links (opt-in until the catalogue exists)

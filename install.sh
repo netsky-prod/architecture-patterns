@@ -48,9 +48,9 @@ for dir in "${TARGETS[@]}"; do
     fi
     mkdir -p "$BASE/$dir"
     if [ "$MODE" = "global" ] || [ -n "$INTO" ]; then
-      ln -s "$SKILL_SRC" "$target"
+      ln -sfn "$SKILL_SRC" "$target"
     else
-      ln -s "../../skills/architecture-patterns" "$target"
+      ln -sfn "../../skills/architecture-patterns" "$target"
     fi
     echo "installed $target"
   fi
