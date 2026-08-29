@@ -28,24 +28,29 @@ done
 
 [ -d "$SKILL_SRC" ] || { echo "skill source not found: $SKILL_SRC" >&2; exit 1; }
 
-case "$MODE" in
-  global) BASE="$HOME" ;;
-  *) BASE="." ;;
-esac
+if [ "$MODE" = "global" ]; then
+  BASE="$HOME"
+  TARGETS=(".agents/skills" ".claude/skills" ".config/opencode/skills")
+else
+  BASE="$SCRIPT_DIR"
+  TARGETS=(".agents/skills" ".claude/skills" ".opencode/skills")
+fi
 [ -n "$INTO" ] && BASE="$INTO"
-
-TARGETS=(".agents/skills" ".claude/skills" ".opencode/skills")
 
 for dir in "${TARGETS[@]}"; do
   target="$BASE/$dir/$NAME"
   if [ "$REMOVE" = "1" ]; then
     if [ -L "$target" ]; then rm "$target"; echo "removed $target"; fi
   else
+    if [ -e "$target" ] && [ ! -L "$target" ]; then
+      echo "error: $target exists and is not a symlink" >&2
+      exit 1
+    fi
     mkdir -p "$BASE/$dir"
     if [ "$MODE" = "global" ] || [ -n "$INTO" ]; then
-      ln -sfn "$SKILL_SRC" "$target"
+      ln -s "$SKILL_SRC" "$target"
     else
-      ln -sfn "../../skills/architecture-patterns" "$target"
+      ln -s "../../skills/architecture-patterns" "$target"
     fi
     echo "installed $target"
   fi

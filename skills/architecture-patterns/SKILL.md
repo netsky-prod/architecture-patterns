@@ -1,5 +1,6 @@
 ---
 name: architecture-patterns
+license: MIT
 description: Reflection protocol, decision tree and pattern catalogue for choosing software architecture and design patterns. Use before designing system architecture, creating a new module/service/class structure, choosing among design patterns, or refactoring tangled code. Covers code-level patterns (strategy, observer, factory, builder, DI, repository, unit of work, data mapper, DTO, specification, value object, aggregate, facade, adapter, decorator, state, template method, command, chain of responsibility, mediator, memoization, cache-aside, pub/sub, feature flag), component-level (hexagonal, clean architecture, layered, modular monolith, event-driven, microservices, plugin architecture, BFF) and system-level (monolith vs microservices, CQRS, event sourcing, outbox, saga, circuit breaker, retry with backoff, bulkhead, idempotency, strangler fig). Do NOT use for trivial edits, typos, renames, or small bug fixes that do not change structure.
 ---
 

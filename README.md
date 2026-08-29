@@ -31,7 +31,7 @@ Remove:
 
     ./install.sh --remove             # add --into <dir> or --global for the same scope
 
-The skill is linked into `.agents/skills/` (Codex, OpenCode), `.claude/skills/` (Claude Code, OpenCode) and `.opencode/skills/` (OpenCode). Restart the agent if the skill does not appear.
+Per-project installs are linked into `.agents/skills/` (Codex, OpenCode), `.claude/skills/` (Claude Code, OpenCode) and `.opencode/skills/` (OpenCode). Global installs go to `~/.agents/skills/` (Codex), `~/.claude/skills/` (Claude Code) and `~/.config/opencode/skills/` (OpenCode). Restart the agent if the skill does not appear.
 
 ## Usage
 
