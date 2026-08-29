@@ -15,7 +15,7 @@ Before writing code, the agent reflects: which architecture/design patterns fit 
 
 Global (all your repos, all three agents):
 
-    git clone <this-repo-url> ~/.arch-patterns
+    git clone https://github.com/netsky-prod/architecture-patterns.git ~/.arch-patterns
     ~/.arch-patterns/install.sh --global
 
 Per project:
